@@ -34,16 +34,16 @@ export default function Home() {
   return (
     <>
       <StructuredData />
-      <div className="h-screen flex flex-col items-center justify-center px-4 sm:px-6 relative overflow-hidden">
+      <div className="h-screen min-h-screen max-h-screen flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 relative overflow-hidden w-full max-w-full">
         {/* Theme Toggle - Top Right */}
         <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
           <ThemeToggle />
         </div>
 
         {/* Main Content Container */}
-        <div className="flex flex-col items-center justify-center w-full max-w-5xl flex-1 py-4">
+        <div className="flex flex-col items-center justify-center w-full max-w-full px-1 sm:max-w-5xl flex-1 py-2 sm:py-3 md:py-4 min-h-0">
           {/* Logo - Above Heading */}
-          <div className="mb-3 sm:mb-4 md:mb-5">
+          <div className="mb-2 sm:mb-3 md:mb-4 lg:mb-5 flex-shrink-0">
             <Link
               href="https://divizend.com"
               target="_blank"
@@ -56,25 +56,27 @@ export default function Home() {
                 alt="Divizend"
                 width={120}
                 height={32}
-                className="h-6 sm:h-7 md:h-8 w-auto"
+                className="h-7 sm:h-8 md:h-9 lg:h-10 xl:h-12 w-auto max-w-full"
                 priority
               />
             </Link>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-extralight tracking-[-0.02em] text-center w-full leading-[0.95] select-none mb-6 sm:mb-8 md:mb-10">
-            <span className="block">Shape the</span>
-            <span className="block mt-0.5 sm:mt-1">Future of</span>
-            <span className="block mt-0.5 sm:mt-1">FinTech</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-extralight tracking-[-0.02em] text-center w-full max-w-full px-1 leading-[0.92] select-none mb-4 sm:mb-5 md:mb-6 lg:mb-8 flex-shrink-0">
+            <span className="block break-words">Personalize your</span>
+            <span className="block mt-0.5 break-words">investment</span>
+            <span className="block mt-0.5 break-words">experience.</span>
           </h1>
 
           {/* Email Form */}
-          <EmailForm />
+          <div className="w-full max-w-full flex-shrink-0 flex justify-center">
+            <EmailForm />
+          </div>
         </div>
 
         {/* Footer Links */}
-        <footer className="absolute bottom-3 left-0 right-0 flex justify-center gap-4 sm:gap-5 text-[9px] sm:text-[10px] md:text-xs text-muted-foreground/70 pb-1 sm:pb-2">
+        <footer className="absolute bottom-2 left-0 right-0 flex justify-center gap-3 sm:gap-4 md:gap-5 text-[10px] sm:text-[10px] md:text-[11px] lg:text-xs text-muted-foreground/70 pb-1 px-2 flex-shrink-0">
           <Link
             href="https://divizend.com/imprint"
             target="_blank"

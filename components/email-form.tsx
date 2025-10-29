@@ -181,7 +181,7 @@ export function EmailForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full max-w-md px-4 sm:px-0"
+      className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full max-w-md px-1 sm:px-2 md:px-0"
     >
       <input
         type="email"
@@ -190,12 +190,12 @@ export function EmailForm() {
         placeholder="E-Mail für Beta-Anmeldung"
         required
         disabled={isSubmitting}
-        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-muted-foreground/60"
+        className="flex-1 min-w-0 px-3 sm:px-3 md:px-4 py-2.5 sm:py-2.5 md:py-3 text-sm sm:text-sm md:text-base bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-muted-foreground/60"
       />
       <button
         type="submit"
         disabled={isSubmitting || status === "success"}
-        className="px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-medium bg-foreground text-background rounded-md hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
+        className="px-5 sm:px-5 md:px-6 py-2.5 sm:py-2.5 md:py-3 text-sm sm:text-sm md:text-base font-medium bg-foreground text-background rounded-md hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap flex-shrink-0"
       >
         {isSubmitting
           ? "Wird angemeldet..."

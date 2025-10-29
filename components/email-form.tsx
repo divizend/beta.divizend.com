@@ -1,27 +1,181 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+
+function getUtmParameters(): {
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
+} {
+  if (typeof window === "undefined") {
+    return {
+      utmSource: null,
+      utmMedium: null,
+      utmCampaign: null,
+      utmTerm: null,
+      utmContent: null,
+    };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return {
+    utmSource: params.get("utm_source"),
+    utmMedium: params.get("utm_medium"),
+    utmCampaign: params.get("utm_campaign"),
+    utmTerm: params.get("utm_term"),
+    utmContent: params.get("utm_content"),
+  };
+}
+
+function getBrowserLanguage(): string | null {
+  if (typeof window === "undefined") return null;
+  return (
+    navigator.language ||
+    (navigator as { userLanguage?: string }).userLanguage ||
+    null
+  );
+}
+
+function getTimezone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
 
 export function EmailForm() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+
+  const submitForm = useCallback(async () => {
+    // If Turnstile is configured, require token; otherwise allow submission without token
+    if (siteKey && !turnstileToken) {
+      setStatus("error");
+      setPendingSubmission(false);
+      setTimeout(() => setStatus("idle"), 3000);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus("idle");
+    setPendingSubmission(false);
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    try {
+      // Collect tracking data
+      const utmParams = getUtmParameters();
+      const language = getBrowserLanguage();
+      const timezone = getTimezone();
+
+      const response = await fetch("/api/submit-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          token: turnstileToken || null,
+          utmSource: utmParams.utmSource,
+          utmMedium: utmParams.utmMedium,
+          utmCampaign: utmParams.utmCampaign,
+          utmTerm: utmParams.utmTerm,
+          utmContent: utmParams.utmContent,
+          language,
+          timezone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStatus("success");
+        setEmail("");
+        setTurnstileToken(null);
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
+        setTimeout(() => setStatus("idle"), 3000);
+      } else {
+        console.error("Submission error:", data);
+        setStatus("error");
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
+        setTurnstileToken(null);
+        setTimeout(() => setStatus("idle"), 3000);
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      setStatus("error");
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
+      setTurnstileToken(null);
+      setTimeout(() => setStatus("idle"), 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [email, turnstileToken, siteKey]);
+
+  // Auto-submit when token is received and submission is pending
+  useEffect(() => {
+    if (pendingSubmission && turnstileToken) {
+      submitForm();
+    }
+  }, [turnstileToken, pendingSubmission, submitForm]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsSubmitting(true);
-    setStatus("idle");
 
-    // TODO: Add your email submission logic here
-    // For now, just simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // If Turnstile is not configured, submit directly
+    if (!siteKey) {
+      await submitForm();
+      return;
+    }
 
-    setIsSubmitting(false);
-    setStatus("success");
-    setEmail("");
+    // If we have a token, submit directly
+    if (turnstileToken) {
+      await submitForm();
+      return;
+    }
 
-    // Reset status after 3 seconds
-    setTimeout(() => setStatus("idle"), 3000);
+    // Otherwise, trigger Turnstile execution and wait for token
+    if (turnstileRef.current) {
+      setPendingSubmission(true);
+      turnstileRef.current?.execute();
+
+      // Timeout after 10 seconds
+      timeoutRef.current = setTimeout(() => {
+        setPendingSubmission((prev) => {
+          if (prev && !turnstileToken) {
+            return false;
+          }
+          return prev;
+        });
+        if (!turnstileToken) {
+          setStatus("error");
+          setTimeout(() => setStatus("idle"), 3000);
+        }
+      }, 10000);
+    } else {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
   }
 
   return (
@@ -47,8 +201,27 @@ export function EmailForm() {
           ? "Wird angemeldet..."
           : status === "success"
           ? "Angemeldet"
+          : status === "error"
+          ? "Fehler"
           : "Für Beta anmelden"}
       </button>
+      {siteKey && (
+        <Turnstile
+          siteKey={siteKey}
+          onSuccess={(token) => setTurnstileToken(token)}
+          onError={() => {
+            setTurnstileToken(null);
+          }}
+          onExpire={() => {
+            setTurnstileToken(null);
+          }}
+          options={{
+            theme: "auto",
+            size: "invisible",
+          }}
+          ref={turnstileRef}
+        />
+      )}
     </form>
   );
 }

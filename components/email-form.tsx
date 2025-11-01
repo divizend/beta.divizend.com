@@ -48,6 +48,8 @@ function getTimezone(): string | null {
 }
 
 export function EmailForm() {
+  const [step, setStep] = useState<"platform" | "email">("platform");
+  const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -89,6 +91,7 @@ export function EmailForm() {
         },
         body: JSON.stringify({
           email,
+          platform: platform || null,
           token: turnstileToken || null,
           utmSource: utmParams.utmSource,
           utmMedium: utmParams.utmMedium,
@@ -105,11 +108,13 @@ export function EmailForm() {
       if (data.success) {
         setStatus("success");
         setEmail("");
+        setPlatform(null);
+        setStep("platform");
         setTurnstileToken(null);
         if (turnstileRef.current) {
           turnstileRef.current.reset();
         }
-        setTimeout(() => setStatus("idle"), 3000);
+        // Don't auto-reset - show success message with button
       } else {
         console.error("Submission error:", data);
         setStatus("error");
@@ -130,7 +135,7 @@ export function EmailForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, turnstileToken, siteKey]);
+  }, [email, platform, turnstileToken, siteKey]);
 
   // Auto-submit when token is received and submission is pending
   useEffect(() => {
@@ -138,6 +143,17 @@ export function EmailForm() {
       submitForm();
     }
   }, [turnstileToken, pendingSubmission, submitForm]);
+
+  function handleReset() {
+    setStatus("idle");
+    setEmail("");
+    setPlatform(null);
+    setStep("platform");
+    setTurnstileToken(null);
+    if (turnstileRef.current) {
+      turnstileRef.current.reset();
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -178,50 +194,117 @@ export function EmailForm() {
     }
   }
 
+  // Show success message
+  if (status === "success") {
+    return (
+      <div className="flex flex-col gap-4 sm:gap-5 w-full max-w-md px-1 sm:px-2 md:px-0 text-center">
+        <p className="text-base sm:text-lg text-foreground">
+          Erfolgreich für die Beta angemeldet!
+        </p>
+        <button
+          type="button"
+          onClick={handleReset}
+          className="w-full px-5 sm:px-6 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base font-medium bg-foreground text-background rounded-md hover:opacity-90 active:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          Weitere E-Mail-Adresse anmelden
+        </button>
+      </div>
+    );
+  }
+
+  // Show platform selection step
+  if (step === "platform") {
+    return (
+      <div className="flex flex-col gap-4 sm:gap-5 w-full max-w-md px-1 sm:px-2 md:px-0">
+        <p className="text-center text-sm sm:text-base text-muted-foreground">
+          Welche Plattform verwendest du?
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <button
+            type="button"
+            onClick={() => {
+              setPlatform("ios");
+              setStep("email");
+            }}
+            className="flex-1 px-5 sm:px-6 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base font-medium bg-background border-2 border-border rounded-md hover:border-foreground/50 hover:bg-foreground/5 active:bg-foreground/10 transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            iOS
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPlatform("android");
+              setStep("email");
+            }}
+            className="flex-1 px-5 sm:px-6 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base font-medium bg-background border-2 border-border rounded-md hover:border-foreground/50 hover:bg-foreground/5 active:bg-foreground/10 transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            Android
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show email input step
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full max-w-md px-1 sm:px-2 md:px-0"
-    >
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="E-Mail für Beta-Anmeldung"
-        required
-        disabled={isSubmitting}
-        className="flex-1 min-w-0 px-3 sm:px-3 md:px-4 py-2.5 sm:py-2.5 md:py-3 text-sm sm:text-sm md:text-base bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-muted-foreground/60"
-      />
+    <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-md px-1 sm:px-2 md:px-0">
       <button
-        type="submit"
-        disabled={isSubmitting || status === "success"}
-        className="px-5 sm:px-5 md:px-6 py-2.5 sm:py-2.5 md:py-3 text-sm sm:text-sm md:text-base font-medium bg-foreground text-background rounded-md hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap flex-shrink-0"
+        type="button"
+        onClick={() => {
+          setStep("platform");
+          setPlatform(null);
+          setEmail("");
+        }}
+        className="self-start text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded px-2 py-1 -ml-2"
       >
-        {isSubmitting
-          ? "Wird angemeldet..."
-          : status === "success"
-          ? "Angemeldet"
-          : status === "error"
-          ? "Fehler"
-          : "Für Beta anmelden"}
+        ← Zurück
       </button>
-      {siteKey && (
-        <Turnstile
-          siteKey={siteKey}
-          onSuccess={(token) => setTurnstileToken(token)}
-          onError={() => {
-            setTurnstileToken(null);
-          }}
-          onExpire={() => {
-            setTurnstileToken(null);
-          }}
-          options={{
-            theme: "auto",
-            size: "invisible",
-          }}
-          ref={turnstileRef}
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-2 sm:gap-3 w-full"
+      >
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={
+            platform === "ios"
+              ? "E-Mail-Adresse deiner Apple ID"
+              : "Gmail-Adresse deines Google Play Kontos"
+          }
+          required
+          disabled={isSubmitting}
+          className="w-full px-3 sm:px-3 md:px-4 py-2.5 sm:py-2.5 md:py-3 text-sm sm:text-sm md:text-base bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-muted-foreground/60"
         />
-      )}
-    </form>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full px-5 sm:px-5 md:px-6 py-2.5 sm:py-2.5 md:py-3 text-sm sm:text-sm md:text-base font-medium bg-foreground text-background rounded-md hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
+        >
+          {isSubmitting
+            ? "Wird angemeldet..."
+            : status === "error"
+            ? "Fehler"
+            : "Für Beta anmelden"}
+        </button>
+        {siteKey && (
+          <Turnstile
+            siteKey={siteKey}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onError={() => {
+              setTurnstileToken(null);
+            }}
+            onExpire={() => {
+              setTurnstileToken(null);
+            }}
+            options={{
+              theme: "auto",
+              size: "invisible",
+            }}
+            ref={turnstileRef}
+          />
+        )}
+      </form>
+    </div>
   );
 }

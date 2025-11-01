@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       email,
+      platform,
       token,
       utmSource,
       utmMedium,
@@ -71,6 +72,14 @@ export async function POST(request: NextRequest) {
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return NextResponse.json(
         { success: false, message: "Invalid email address" },
+        { status: 400 }
+      );
+    }
+
+    // Validate platform
+    if (!platform || (platform !== "ios" && platform !== "android")) {
+      return NextResponse.json(
+        { success: false, message: "Invalid platform" },
         { status: 400 }
       );
     }
@@ -118,6 +127,7 @@ export async function POST(request: NextRequest) {
     try {
       await db.insert(betaSignups).values({
         email: normalizedEmail,
+        platform: platform as "ios" | "android",
         userAgent: userAgent || null,
         referrer: referrer || null,
         ipAddress: ipAddress || null,

@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://beta.divizend.com"),
   title: {
-    default: "Divizend Beta | Shape the Future of FinTech",
+    default: "Divizend Beta | Personalize your investment experience",
     template: "%s | Divizend",
   },
   description:
-    "Join the Divizend beta program and help shape the future of financial technology. Be among the first to experience innovative FinTech solutions.",
+    "Join the Divizend beta program and personalize your investment experience. Be among the first to experience innovative, tailored FinTech solutions.",
   keywords: [
     "Divizend",
     "FinTech",
@@ -48,9 +48,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://beta.divizend.com",
     siteName: "Divizend Beta",
-    title: "Divizend Beta | Shape the Future of FinTech",
+    title: "Divizend Beta | Personalize your investment experience",
     description:
-      "Join the Divizend beta program and help shape the future of financial technology.",
+      "Join the Divizend beta program and personalize your investment experience.",
     images: [
       {
         url: "/og-image.png",
@@ -62,9 +62,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Divizend Beta | Shape the Future of FinTech",
+    title: "Divizend Beta | Personalize your investment experience",
     description:
-      "Join the Divizend beta program and help shape the future of financial technology.",
+      "Join the Divizend beta program and personalize your investment experience.",
     images: ["/og-image.png"],
   },
   alternates: {

@@ -1,8 +1,11 @@
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+
+export const platformEnum = pgEnum("platform", ["ios", "android"]);
 
 export const betaSignups = pgTable("beta_signups", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
+  platform: platformEnum("platform"),
   userAgent: text("user_agent"),
   referrer: text("referrer"),
   ipAddress: text("ip_address"),

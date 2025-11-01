@@ -9,7 +9,7 @@ function StructuredData() {
     "@type": "WebSite",
     name: "Divizend Beta",
     description:
-      "Join the Divizend beta program and help shape the future of financial technology.",
+      "Join the Divizend beta program and personalize your investment experience.",
     url: "https://beta.divizend.com",
     publisher: {
       "@type": "Organization",
